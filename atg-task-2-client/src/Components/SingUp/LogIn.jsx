@@ -25,20 +25,14 @@ const LogIn = () => {
       .post("http://localhost:3001/login", formData)
       .then((result) => {
         console.log(result);
-        const status = result.status;
-        if (status === 200) {
-          navigate("/home");
-        } else if (status === 401) {
-          setError("Incorrect password");
-        } else if (status === 404) {
-          setError("User not found");
-        } else {
-          setError("Server error");
-        }
+        navigate("/home");
       })
       .catch((err) => {
-        setError("Server error");
-        console.log(err);
+        if (err.response) {
+          setError(err.response.data.message); // Set error message from server response
+        } else {
+          setError("Something went wrong. Please try again."); // Generic error message
+        }
       });
 
     // Reset the form after submission

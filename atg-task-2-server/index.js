@@ -10,26 +10,26 @@ app.use(cors());
 
 mongoose.connect("mongodb://127.0.0.1:27017/atgMernTask2");
 
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  UserModel.findOne({ username }, (err, user) => {
-    if (err) {
-      return res.status(500).json({ message: "server error" });
-    }
+
+  try {
+    const user = await UserModel.findOne({ username });
+
     if (!user) {
-      return res.status(404).json({ message: "user not found" });
+      return res.status(404).json({ message: "User not found" });
     }
-    bcrypt.compare(password, user.password, (bcryptErr, isMatch) => {
-      if (bcryptErr) {
-        return res.status(500).json({ message: "server error" });
-      }
-      if (isMatch) {
-        return res.status(200).json({ message: "success" });
-      } else {
-        return res.status(401).json({ message: "incorrect password" });
-      }
-    });
-  });
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (passwordMatch) {
+      return res.status(200).json({ message: "Success" });
+    } else {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 app.post("/register", async (req, res) => {
@@ -50,8 +50,16 @@ app.post("/register", async (req, res) => {
       }
     }
 
-    // If username and email are unique, create a new user
-    const newUser = await UserModel.create({ username, email, password });
+    // Hash the password before saving it
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // If username and email are unique, create a new user with hashed password
+    const newUser = await UserModel.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
     res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
