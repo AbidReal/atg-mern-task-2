@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,8 @@ const SignUp = () => {
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,15 +25,25 @@ const SignUp = () => {
     e.preventDefault();
     axios
       .post("http://localhost:3001/register", formData)
-      .then((result) => console.log(result))
-      .catch((err) => console.log(err));
+      .then((result) => {
+        console.log(result);
+        navigate("/login");
+      })
+      .catch((err) => {
+        if (err.response) {
+          setError(err.response.data.message); // Set error message from server response
+        } else {
+          setError("Something went wrong. Please try again."); // Generic error message
+        }
+      });
 
-    // Reset the form after submission (optional)
+    // Reset the form after submission
     setFormData({ username: "", email: "", password: "" });
   };
 
   return (
     <Form onSubmit={handleSubmit}>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <Form.Group controlId="formUsername">
         <Form.Label>Username</Form.Label>
         <Form.Control

@@ -1,13 +1,15 @@
-/* eslint-disable react/prop-types */
 import { useState } from "react";
-import { Form, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Form, Button, Alert } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const LogIn = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,53 +21,71 @@ const LogIn = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login submission, you can perform actions like authentication here
-    console.log("Login form submitted with data:", formData);
-    // Reset the form after submission (optional)
-    setFormData({ email: "", password: "" });
+    axios
+      .post("http://localhost:3001/login", formData)
+      .then((result) => {
+        console.log(result);
+        const status = result.status;
+        if (status === 200) {
+          navigate("/home");
+        } else if (status === 401) {
+          setError("Incorrect password");
+        } else if (status === 404) {
+          setError("User not found");
+        } else {
+          setError("Server error");
+        }
+      })
+      .catch((err) => {
+        setError("Server error");
+        console.log(err);
+      });
+
+    // Reset the form after submission
+    setFormData({ username: "", password: "" });
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
-      <Form.Group controlId="formEmail">
-        <Form.Label>Email address</Form.Label>
-        <Form.Control
-          type="email"
-          placeholder="Enter email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-      </Form.Group>
+    <div>
+      {error && <Alert variant="danger">{error}</Alert>}{" "}
+      {/* Display error message */}
+      <Form onSubmit={handleSubmit}>
+        <Form.Group controlId="formUsername">
+          <Form.Label>Username</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+        </Form.Group>
 
-      <Form.Group controlId="formPassword">
-        <Form.Label>Password</Form.Label>
-        <Form.Control
-          type="password"
-          placeholder="Password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-      </Form.Group>
+        <Form.Group controlId="formPassword">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            placeholder="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </Form.Group>
 
-      <Button variant="primary" type="submit">
-        Login
-      </Button>
+        <Button variant="primary" type="submit">
+          Login
+        </Button>
 
-      <Form.Text className="text-muted mt-2">
-        New?{" "}
-        <Link
-          to={"/register"}
-          className="text-primary"
-          style={{ cursor: "pointer" }}
-        >
-          SignUp
-        </Link>
-      </Form.Text>
-    </Form>
+        <Form.Text className="text-muted mt-2">
+          New?{" "}
+          <Link to={"/register"} className="text-primary">
+            SignUp
+          </Link>
+        </Form.Text>
+      </Form>
+    </div>
   );
 };
 
