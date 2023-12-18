@@ -8,6 +8,7 @@ const UserModel = require("./models/users");
 const jwt = require("jsonwebtoken");
 const secretKey = process.env.JWT_SECRET_KEY;
 const cookieParser = require("cookie-parser");
+const PostModel = require("./models/posts");
 
 //middleware
 const app = express();
@@ -34,6 +35,42 @@ const verifyUser = (req, res, next) => {
     });
   }
 };
+
+// Get all posts
+app.get("/posts", async (req, res) => {
+  try {
+    const posts = await PostModel.find();
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Create a new post
+app.post("/posts", verifyUser, async (req, res) => {
+  const { title, content } = req.body;
+  const token = req.cookies.token;
+
+  try {
+    const decoded = jwt.verify(token, secretKey);
+    const user = await UserModel.findOne({ username: decoded.username });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const newPost = new PostModel({
+      title,
+      content,
+      username: user.username,
+    });
+
+    const savedPost = await newPost.save();
+    res.status(201).json(savedPost);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
 app.get("/home", verifyUser, async (req, res) => {
   try {
