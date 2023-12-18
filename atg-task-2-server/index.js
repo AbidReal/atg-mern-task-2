@@ -1,15 +1,60 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const UserModel = require("./models/users");
+const jwt = require("jsonwebtoken");
+const secretKey = process.env.JWT_SECRET_KEY;
+const cookieParser = require("cookie-parser");
 
+//middleware
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 
 mongoose.connect("mongodb://127.0.0.1:27017/atgMernTask2");
 
+const verifyUser = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.json("no token found");
+  } else {
+    jwt.verify(token, secretKey, (err, decoded) => {
+      if (err) return res.json("token is wrong");
+      next();
+    });
+  }
+};
+
+app.get("/home", verifyUser, async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, secretKey);
+
+    const user = await UserModel.findOne({ username: decoded.username });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Success", username: user.username });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+//login section
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -23,6 +68,10 @@ app.post("/login", async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (passwordMatch) {
+      const token = jwt.sign({ username: user.username }, secretKey, {
+        expiresIn: "10h",
+      });
+      res.cookie("token", token);
       return res.status(200).json({ message: "Success" });
     } else {
       return res.status(401).json({ message: "Incorrect password" });
@@ -32,6 +81,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// registration section
 app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -64,6 +114,11 @@ app.post("/register", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
+});
+
+//forgot password section
+app.post("/forgot-password", (req, res) => {
+  const { email } = req.body;
 });
 
 app.listen(3001, () => {

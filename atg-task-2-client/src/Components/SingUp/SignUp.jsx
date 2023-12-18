@@ -79,17 +79,18 @@ const SignUp = () => {
           required
         />
       </Form.Group>
+      <div className="d-flex flex-column mt-4 gap-2">
+        <Button variant="primary" type="submit">
+          Sign Up
+        </Button>
 
-      <Button variant="primary" type="submit">
-        Sign Up
-      </Button>
-
-      <Form.Text className="text-muted mt-2">
-        Already have an account?{" "}
-        <Link className="text-primary" to={"/login"}>
-          Login
-        </Link>
-      </Form.Text>
+        <Form.Text className="text-muted ">
+          Already have an account?{" "}
+          <Link className="text-primary" to={"/login"}>
+            Login
+          </Link>
+        </Form.Text>
+      </div>
     </Form>
   );
 };

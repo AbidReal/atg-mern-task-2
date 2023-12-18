@@ -3,15 +3,13 @@ import { Form, Button, Alert } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const LogIn = () => {
+const ForgotPassword = () => {
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+    email: "",
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  axios.defaults.withCredentials = true;
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -23,10 +21,10 @@ const LogIn = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     axios
-      .post("http://localhost:3001/login", formData)
+      .post("http://localhost:3001/forgot-password", formData)
       .then((result) => {
         console.log(result);
-        navigate("/home");
+        navigate("/login");
       })
       .catch((err) => {
         if (err.response) {
@@ -45,32 +43,20 @@ const LogIn = () => {
       {error && <Alert variant="danger">{error}</Alert>}{" "}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="formUsername">
-          <Form.Label>Username</Form.Label>
+          <Form.Label>Enter email to reset password</Form.Label>
           <Form.Control
-            type="text"
-            placeholder="Enter username"
-            name="username"
-            value={formData.username}
+            type="email"
+            placeholder="Enter email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
             required
           />
         </Form.Group>
 
-        <Form.Group controlId="formPassword">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
         <div className="d-flex flex-column mt-4 gap-3">
-          <Link to={"/forgot-password"}>Forgot Password</Link>
           <Button variant="primary" type="submit">
-            Login
+            Send Mail
           </Button>
 
           <Form.Text className="text-muted">
@@ -85,4 +71,4 @@ const LogIn = () => {
   );
 };
 
-export default LogIn;
+export default ForgotPassword;
